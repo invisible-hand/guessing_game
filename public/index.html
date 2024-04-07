@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guessing Game</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto py-10">
+    <div class="flex justify-center">
+      <div class="max-w-md mx-4 bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-3xl font-bold mb-5 text-center">Guessing Game</h1>
+        <div id="question" class="mb-5 text-xl text-center"></div>
+        <div class="flex items-center mb-5">
+          <input type="text" id="answer" class="border border-gray-300 px-2 py-1 rounded flex-grow">
+          <button id="submit" class="bg-blue-500 text-white px-4 py-2 rounded ml-2">Submit</button>
+          <button id="skip" class="bg-gray-500 text-white px-4 py-2 rounded ml-2">Skip</button>
+        </div>
+        <div id="result" class="text-center mb-5"></div>
+        <div class="text-center mb-5">
+          <p>Difficulty Level: <span id="difficultyLevel">1</span></p>
+        </div>
+      </div>
+      <div class="max-w-xs mx-4 bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4 text-center">Game Stats</h2>
+        <div class="grid grid-cols-1 gap-4">
+          <div>
+            <p class="text-lg font-bold">Correct Answers:</p>
+            <p class="text-2xl" id="correctCount">0</p>
+          </div>
+          <div>
+            <p class="text-lg font-bold">Incorrect Answers:</p>
+            <p class="text-2xl" id="incorrectCount">0</p>
+          </div>
+          <div>
+            <p class="text-lg font-bold">Streak:</p>
+            <p class="text-2xl" id="streak">0</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
