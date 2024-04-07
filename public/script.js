@@ -11,8 +11,7 @@ let currentQuestion = '';
 let correctCount = 0;
 let incorrectCount = 0;
 let difficultyLevel = 1;
-let streak = 0;
-
+let lives = 3;
 
 async function fetchQuestion() {
   try {
@@ -37,20 +36,26 @@ async function checkAnswer() {
         body: JSON.stringify({ question: currentQuestion, answer }),
       });
       const data = await response.json();
-      resultElement.innerText = data.result;
+      
       if (data.result.toLowerCase().includes('correct')) {
+        resultElement.innerHTML = `<p class="text-4xl text-green-500 font-bold">Correct answer!</p>`;
         correctCount++;
         correctCountElement.innerText = correctCount;
-        streak++;
-        document.getElementById('streak').innerText = streak;
         difficultyLevel = Math.min(10, difficultyLevel + 1);
       } else {
+        resultElement.innerHTML = `<p class="text-4xl text-red-500 font-bold">Wrong answer.</p>`;
         incorrectCount++;
         incorrectCountElement.innerText = incorrectCount;
-        streak = 0;
-        document.getElementById('streak').innerText = streak;
+        lives--;
+        document.getElementById('livesCount').innerText = lives;
+        if (lives === 0) {
+          showGameOver();
+        }
         difficultyLevel = Math.max(1, difficultyLevel - 1);
       }
+      
+      resultElement.innerHTML += `<p class="mt-4 text-xl">${data.result}</p>`;
+      
       difficultyLevelElement.innerText = difficultyLevel;
       answerElement.value = '';
       fetchQuestion();
@@ -66,13 +71,50 @@ answerElement.addEventListener('keyup', (event) => {
   }
 });
 
+function showGameOver() {
+  document.getElementById('finalCorrectCount').innerText = correctCount;
+  document.getElementById('finalIncorrectCount').innerText = incorrectCount;
+  document.getElementById('finalDifficultyLevel').innerText = difficultyLevel;
+  document.getElementById('gameOverModal').classList.remove('hidden');
+}
 
+document.getElementById('newGame').addEventListener('click', () => {
+  resetGame();
+  document.getElementById('gameOverModal').classList.add('hidden');
+});
+
+document.getElementById('shareSocial').addEventListener('click', () => {
+  const shareText = `I scored ${correctCount} correct answers and reached difficulty level ${difficultyLevel} in the Guessing Game! Can you beat my score? 💪`;
+  const shareUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText);
+  window.open(shareUrl, '_blank');
+});
 
 function skipQuestion() {
   fetchQuestion();
 }
 
+function startGame() {
+  document.getElementById('welcomeModal').classList.add('hidden');
+  resetGame();
+}
+
+function resetGame() {
+  currentQuestion = '';
+  correctCount = 0;
+  incorrectCount = 0;
+  difficultyLevel = 1;
+  lives = 3;
+
+  correctCountElement.innerText = correctCount;
+  incorrectCountElement.innerText = incorrectCount;
+  difficultyLevelElement.innerText = difficultyLevel;
+  document.getElementById('livesCount').innerText = lives;
+
+  fetchQuestion();
+}
+
 submitButton.addEventListener('click', checkAnswer);
 skipButton.addEventListener('click', skipQuestion);
+document.getElementById('startGame').addEventListener('click', startGame);
 
 fetchQuestion();

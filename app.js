@@ -18,35 +18,37 @@ app.get('/api/question', async (req, res) => {
     const difficulty = parseInt(req.query.difficulty) || 1;
     const generationConfig = {
       maxOutputTokens: 300,
-      temperature: 0.1,
+      temperature: 0.5,
       topP: 0.1,
       topK: 16,
     };
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro', generationConfig });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.0-pro-latest', generationConfig });
     let question = '';
 
-    while (true) {
       const prompt = `Each question has a difficulty level from 1 to 10. 1 is the easiest and 10 is the hardest.
         Generate a question of difficulty level ${difficulty}. 
-        Question should be on one of the topics, picked each time at random: Geography, Popular culture, Math, Sports or Literature. 
-        Do not repeat topics more than two times in a row.
         You should be able to answer the question with one or two words or numbers. 
         Do not provide answer options.
-        Make sure questions are diverse and interesting.
-        Generate only one question per request.
         Do not state the topic in the question.
-        Do not ask question that you have already asked - look in this list ${generatedQuestions}
-        Do not ask question about the capital of France. Try to think of something unique!`;
+        Do not ask a question that you have already asked from this list: ${generatedQuestions}
+        10 examples of the questions for your guidance:
+        1. What is the capital city of Japan?
+        2. Who wrote Hamlet?
+        4. Who sang "Thriller"?
+        5. In what year did the first man walk on the moon?
+        6. What is the value of x if 5x - 15 = 10?
+        7. Which country won the FIFA World Cup in 2014?
+        8. Who is the author of One Hundred Years of Solitude?
+        9. What mathematical constant is approximately equal to 2.718?
+        10. What is the name of the second-highest mountain in the world?`;
       const generationResult = await model.generateContent(prompt);
       const response = await generationResult.response;
       question = await response.text();
-      console.log(generatedQuestions)
 
       if (!generatedQuestions.includes(question)) {
         generatedQuestions.push(question);
-        break;
+        console.log('Generated question:', question);
       }
-    }
 
     res.json({ question });
   } catch (error) {
@@ -55,6 +57,8 @@ app.get('/api/question', async (req, res) => {
   }
 });
 
+
+
 app.post('/api/answer', async (req, res) => {
   try {
     const { question, answer } = req.body;
@@ -62,14 +66,14 @@ app.post('/api/answer', async (req, res) => {
     const prompt = `Question: ${question}\nAnswer: ${answer}\nIs the Answer correct? Respond with "yes" or "no" only.`;
     const generationResult = await model.generateContent(prompt);
     const response = await generationResult.response;
-    const text = response.text();
-    const isCorrect = text.toLowerCase().includes('yes');
+    const text = (await response.text()).trim();
+    const isCorrect = text === 'yes';
     
     const answerGemini = await model.generateContent(`Answer this question briefly: ${question}`);
     const response2 = await answerGemini.response;
     const text2 = response2.text();
 
-    const validationResult = isCorrect ? `Correct answer!\n\n The question was:\n\n"${question}"\n\n Your answer: ${answer} \nCorrect answer is: ${text2}` : `Wrong answer.\n\n The question was:\n\n"${question}"\n\n Your answer: ${answer}\nAnswer is: ${text2}`;
+    const validationResult = isCorrect ? `The question was:\n\n"${question}"\n\n Your answer: ${answer}. \nCorrect answer is: ${text2}.` : `The question was:\n\n"${question}"\n\n Your answer: ${answer}.\nAnswer is: ${text2}.`;
     res.json({ result: validationResult });
   } catch (error) {
     console.error('Error validating answer:', error);
