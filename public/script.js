@@ -56,7 +56,7 @@ async function checkAnswer() {
         difficultyLevel = Math.max(1, difficultyLevel - 1);
       }
       
-      resultElement.innerHTML += `<p class="mt-4 text-xl">${data.result}</p>`;
+      resultElement.innerHTML += `<p class="mt-4 text-xl">${data.result.replace(/\n/g, '<br>')}</p>`;
       
       answerElement.value = '';
       await fetchQuestion();

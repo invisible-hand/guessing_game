@@ -36,6 +36,7 @@ app.get('/api/question', async (req, res) => {
     const generationResult = await model.generateContent(prompt);
     const response = await generationResult.response;
     question = await response.text();
+    console.log(generatedQuestions)
 
     if (!generatedQuestions.includes(question)) {
       generatedQuestions.push(question);
@@ -53,20 +54,26 @@ app.post('/api/answer', async (req, res) => {
   try {
     const { question, answer } = req.body;
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-    
+
     // Get the correct answer from the model
     console.log('Question received:', question);
-    const correctAnswerPrompt = `Question: ${question}\nAnswer: ${answer}\nIs this answer correct? Respond with "Yes" or "No".`;
+    const correctAnswerPrompt = `Question: ${question}\nAnswer the question briefly.`;
     const correctAnswerResult = await model.generateContent(correctAnswerPrompt);
     const correctAnswerResponse = await correctAnswerResult.response;
-    const correctAnswer = (await correctAnswerResponse.text()).trim().toLowerCase();
-    
-    // Check if the LLM's answer contains "yes"
-    const isCorrect = correctAnswer.includes('yes');
+    const correctAnswer = (await correctAnswerResponse.text()).trim();
+    console.log('Correct answer:', correctAnswer);
 
-    const validationResult = isCorrect
-      ? `The question was:\n\n"${question}"\n\nYour answer: ${answer}.\nThe answer is correct.`
-      : `The question was:\n\n"${question}"\n\nYour answer: ${answer}.\nThe answer is incorrect.`;
+    // Check if the user's answer is correct
+    const isAnswerCorrectPrompt = `Question: ${question}\nAnswer: ${answer}\nIs this answer correct? Respond with "Yes" or "No".`;
+    const isAnswerCorrectResult = await model.generateContent(isAnswerCorrectPrompt);
+    const isAnswerCorrectResponse = await isAnswerCorrectResult.response;
+    const isAnswerCorrect = (await isAnswerCorrectResponse.text()).trim().toLowerCase();
+    console.log('User\'s answer:', answer);
+    console.log('Is answer correct:', isAnswerCorrect);
+
+    const isCorrect = isAnswerCorrect.includes('yes');
+
+    const validationResult = `The question was:\n"${question}"\n\nCorrect answer:\n${correctAnswer}\n\nYour answer:\n${answer}\n\n${isCorrect ? 'Your answer is correct! ✅' : 'Your answer is incorrect. ❌'}`;
 
     res.json({ result: validationResult, isCorrect });
   } catch (error) {
