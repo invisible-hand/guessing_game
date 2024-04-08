@@ -3,9 +3,9 @@ const answerElement = document.getElementById('answer');
 const submitButton = document.getElementById('submit');
 const skipButton = document.getElementById('skip');
 const resultElement = document.getElementById('result');
-const difficultyLevelElement = document.getElementById('difficultyLevel');
 const correctCountElement = document.getElementById('correctCount');
 const incorrectCountElement = document.getElementById('incorrectCount');
+const livesCountElement = document.getElementById('livesCount');
 
 let currentQuestion = '';
 let correctCount = 0;
@@ -28,6 +28,7 @@ async function checkAnswer() {
   const answer = answerElement.value.trim();
   if (answer !== '') {
     try {
+      console.log('Current question:', currentQuestion);
       const response = await fetch('/api/answer', {
         method: 'POST',
         headers: {
@@ -37,7 +38,7 @@ async function checkAnswer() {
       });
       const data = await response.json();
       
-      if (data.result.toLowerCase().includes('correct')) {
+      if (data.isCorrect) {
         resultElement.innerHTML = `<p class="text-4xl text-green-500 font-bold">Correct answer!</p>`;
         correctCount++;
         correctCountElement.innerText = correctCount;
@@ -47,18 +48,18 @@ async function checkAnswer() {
         incorrectCount++;
         incorrectCountElement.innerText = incorrectCount;
         lives--;
-        document.getElementById('livesCount').innerText = lives;
+        livesCountElement.innerText = lives;
         if (lives === 0) {
           showGameOver();
+          return;
         }
         difficultyLevel = Math.max(1, difficultyLevel - 1);
       }
       
       resultElement.innerHTML += `<p class="mt-4 text-xl">${data.result}</p>`;
       
-      difficultyLevelElement.innerText = difficultyLevel;
       answerElement.value = '';
-      fetchQuestion();
+      await fetchQuestion();
     } catch (error) {
       console.error('Error checking answer:', error);
     }
@@ -107,8 +108,8 @@ function resetGame() {
 
   correctCountElement.innerText = correctCount;
   incorrectCountElement.innerText = incorrectCount;
-  difficultyLevelElement.innerText = difficultyLevel;
-  document.getElementById('livesCount').innerText = lives;
+  livesCountElement.innerText = lives;
+  resultElement.innerHTML = '';
 
   fetchQuestion();
 }
