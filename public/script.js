@@ -1,7 +1,6 @@
 const questionElement = document.getElementById('question');
 const answerElement = document.getElementById('answer');
 const submitButton = document.getElementById('submit');
-const skipButton = document.getElementById('skip');
 const resultElement = document.getElementById('result');
 const correctCountElement = document.getElementById('correctCount');
 const incorrectCountElement = document.getElementById('incorrectCount');
@@ -90,10 +89,6 @@ document.getElementById('shareSocial').addEventListener('click', () => {
   window.open(shareUrl, '_blank');
 });
 
-function skipQuestion() {
-  fetchQuestion();
-}
-
 function startGame() {
   document.getElementById('welcomeModal').classList.add('hidden');
   resetGame();
@@ -115,7 +110,7 @@ function resetGame() {
 }
 
 submitButton.addEventListener('click', checkAnswer);
-skipButton.addEventListener('click', skipQuestion);
+document.getElementById('resetGame').addEventListener('click', resetGame);
 document.getElementById('startGame').addEventListener('click', startGame);
 
 fetchQuestion();

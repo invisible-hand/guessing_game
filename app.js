@@ -32,7 +32,8 @@ app.get('/api/question', async (req, res) => {
       Ask question on one of the following topics, randomly: Math, Geogrpahy, Cars,. Music, Popular culture.
       Do not state the topic in the question.
       Do not ask a question that you have already asked from this list: ${generatedQuestions}
-      Do not ask a question about capital of france, largest ocean or largest country in the world.`;
+      Do not ask a question about capital of france, largest ocean or largest country in the world.
+      Do not ask math questions`;
     const generationResult = await model.generateContent(prompt);
     const response = await generationResult.response;
     question = await response.text();
