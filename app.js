@@ -2,16 +2,24 @@ require('dotenv').config();
 
 const express = require('express');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
+// Initialize SQLite database
+const db = new sqlite3.Database('questions.db');
+
+// Create a table to store the questions
+db.run(`CREATE TABLE IF NOT EXISTS questions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  question TEXT UNIQUE
+)`);
 
 app.use(express.static('public'));
 app.use(express.json());
 
 const port = process.env.PORT || 3000;
-
-const generatedQuestions = [];
 
 app.get('/api/question', async (req, res) => {
   try {
@@ -25,24 +33,41 @@ app.get('/api/question', async (req, res) => {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.0-pro-latest', generationConfig });
     let question = '';
 
+    // Retrieve the list of existing questions from the database
+    const existingQuestions = await new Promise((resolve, reject) => {
+      db.all('SELECT question FROM questions', (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows.map(row => row.question));
+        }
+      });
+    });
+
     const prompt = `Each question has a difficulty level from 1 to 10. 1 is the easiest and 10 is the hardest.
       Generate a question of difficulty level ${difficulty}. 
       You should be able to answer the question with one or two words or numbers. 
       Do not provide answer options.
-      Ask question on one of the following topics, randomly: Math, Geogrpahy, Cars,. Music, Popular culture.
+      Ask question on one of the following topics, randomly: Math, Geography, Cars, Music, Popular culture, Cooking, History, General Knowledge.
       Do not state the topic in the question.
-      Do not ask a question that you have already asked from this list: ${generatedQuestions}
-      Do not ask a question about capital of france, largest ocean or largest country in the world.
-      Do not ask math questions`;
+      Do not ask a question that you have already asked from this list: ${existingQuestions.join(', ')}
+      Do not ask a question about the capital of France, largest ocean, or largest country in the world.
+      Do not ask math questions.`;
     const generationResult = await model.generateContent(prompt);
     const response = await generationResult.response;
     question = await response.text();
-    console.log(generatedQuestions)
+    console.log('Generated question:', question);
 
-    if (!generatedQuestions.includes(question)) {
-      generatedQuestions.push(question);
-      console.log('Generated question:', question);
-    }
+    // Store the generated question in the database
+    await new Promise((resolve, reject) => {
+      db.run('INSERT OR IGNORE INTO questions (question) VALUES (?)', [question], (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
 
     res.json({ question });
   } catch (error) {
